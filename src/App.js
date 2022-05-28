@@ -50,7 +50,7 @@ function App() {
 
   const task=["pen","rectangle","line"];
 
-  const [selectedTask,setSelectedTask]=useState(task[0]);
+  const [selectedTask,setSelectedTask]=useState(task[2]);
   //const selectedTask=task[tnum];
   const [selectedcolor, setSelectedColor]=useState(colors[0]);
   const [mouseDown,setMouseDown]=useState(false);
@@ -198,7 +198,9 @@ function App() {
         height:"30px",
         width:"600px",
       }}>
-        <button style={{
+        <button
+        onClick={clear}
+        style={{
           padding:"2px",background:"lightblue", padding:"4px",margin:"2px",width:"60px"
         }}>New</button>
         <button 
