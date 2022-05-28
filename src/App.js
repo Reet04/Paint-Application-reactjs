@@ -3,6 +3,7 @@ import './App.css';
 import menubar from './components/menubar';
 import { useCallback, useRef,useEffect,useLayoutEffect, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm'
+import { type } from '@testing-library/user-event/dist/type';
 
 const generator=rough.generator();
 
@@ -14,10 +15,31 @@ function createElement2(x1,y1,x2,y2,col){
   const roughElement=generator.rectangle(x1,y1,x2-x1,y2-y1,{stroke:col});
   return {x1,y1,x2,y2,roughElement};
 }
-//const tnum=1;
+
+const useHistory=initialState=>{
+  const [index,setIndex]=useState(0);
+  const [history,setHistory]=useState([initialState]);
+  const setState = (action, overwrite = false) => {
+    const newState = typeof action === "function" ? action(history[index]) : action;
+    if (overwrite) {
+      const historyCopy = [...history];
+      historyCopy[index] = newState;
+      setHistory(historyCopy);
+    } else {
+      const updatedState = [...history].slice(0, index + 1);
+      setHistory([...updatedState, newState]);
+      setIndex(prevState => prevState + 1);
+    }
+  };
+
+  const undo = () => index > 0 && setIndex(prevState => prevState - 1);
+  const redo = () => index < history.length - 1 && setIndex(prevState => prevState + 1);
+
+  return [history[index], setState, undo, redo];
+};
 
 function App() {
-  const[elements, setElements]=useState([]);
+  const[elements, setElements,undo,redo]=useHistory([]);
   const[drawing,setDrawing]=useState(false);
   
   const canvasRef=useRef(null);
@@ -106,7 +128,7 @@ function App() {
   
       const elementsCopy=[...elements];
       elementsCopy[index]=updatedElement;
-      setElements(elementsCopy);
+      setElements(elementsCopy,true);
       }
     if(selectedTask==task[2]){
     if(!mouseDown) return;
@@ -119,7 +141,7 @@ function App() {
 
     const elementsCopy=[...elements];
     elementsCopy[index]=updatedElement;
-    setElements(elementsCopy);
+    setElements(elementsCopy,true);
     }
   }
   
@@ -144,7 +166,8 @@ function App() {
   // });
 
   const clear=()=>{
-    ctx.current.clearRect(0,0,ctx.current.canvas.width,ctx.current.canvas.height);
+    window.location.reload(false);
+    //ctx.current.clearRect(0,0,ctx.current.canvas.width,ctx.current.canvas.height);
   }
 
   const download= async()=>{
@@ -223,10 +246,15 @@ function App() {
             }
           </select>
           
-          <button style={{
+          <button 
+          onClick={undo}
+          style={{
           padding:"2px",background:"lightblue", padding:"4px",margin:"2px",width:"75px"
           }}>Undo</button>
-          <button style={{
+          
+          <button
+          onClick={redo}
+          style={{
           padding:"2px",background:"lightblue", padding:"4px",margin:"2px",width:"75px"
           }}>Redo</button>
           <button 
